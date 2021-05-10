@@ -10,7 +10,10 @@ module Types
       description "Find a user by ID"
       argument :id, ID, required: true
     end
-    field :doctors, [Types::UserType], null: true
+    field :doctors, [Types::UserType], null: true do
+    description "Doctors for patients"
+    argument :id, ID, required: true
+  end
     field :viewAppointments,  [Types::AppointmentType], null: true do
       description "Appointments of current_user"
       argument :id, ID, required: true
@@ -28,10 +31,15 @@ module Types
       User.find(id)
     end
 
-    def doctors
+    def doctors(id:)
+      user = User.find(id)
       debugger
-      Role.find_by_name('Doctor').users
-      #User.with_role :Doctor
+      if user.has_role? :Doctor
+        raise GraphQL::ExecutionError, I18n.t('view_doctors.access_denied')
+      else
+        Role.find_by_name('Doctor').users
+        #User.with_role :Doctor
+      end
     end
 
     def viewAppointments(id:)

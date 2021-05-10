@@ -6,9 +6,13 @@ module Mutations
     argument :time_slot, GraphQL::Types::ISO8601Date, required: true, validates: {numericality: {greater_than_or_equal_to: Date.today}}
     field :appointment, Types::AppointmentType, null: true
     field :message, String, null: true
-    
+
     def resolve(id:,doctor_id:,reason:,time_slot:)
       user = User.find(id)
+      if user.has_role? :Doctor
+        
+        return {message: I18n.t('appointment.create.access_denied')}
+      end
       appointment=user.patient_appointments.build(doctor_id: doctor_id, reason:reason, time_slot: time_slot)
       if appointment.save!
         {
